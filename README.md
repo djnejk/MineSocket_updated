@@ -4,19 +4,52 @@
 
 # MineSocket
 
-MineSocket is a Minecraft mod that allows you to connect to a WebSocket server and send and receive messages from it.
-This mod is still in development and is not yet ready for use.
+MineSocket is a Minecraft Fabric mod that allows Minecraft to communicate with external applications
+via a WebSocket connection. It enables sending commands and events **to Minecraft** and receiving
+events **from Minecraft** in real time.
+
+> ⚠️ This project is a **fork** of the original MineSocket mod and has been **updated to support
+Minecraft 1.21.10**.
+
+This mod is still in development and may change at any time.
+
+---
+
+## Minecraft Version
+
+- ✅ **Minecraft 1.21.10**
+- Fabric Loader + Fabric API
+
+---
 
 ## Features
 
-- [x] Handle (dis)connections to a websocket
-- [x] Receive messages from a websocket client (i.e. Streamer.bot)
-- [ ] Secure connection with the websocket
-- [ ] Handle callbacks from the server
+- [x] Handle WebSocket connections and disconnections
+- [x] Receive messages from a WebSocket client (e.g. Streamer.bot, custom bots, Node.js, Python)
+- [x] Execute Minecraft commands via WebSocket
+- [ ] Secure WebSocket connections (authentication / encryption)
+- [ ] Handle callbacks and events sent back to clients
 
-This minecraft mod is intended to be a replacement of the bukkit
-plugin [Minecraft_WebSocket_Integration](https://github.com/KK964/Minecraft_Websocket_Intergration/), which is no longer
-maintained.
+---
 
-This means that this mod can work with the configuration for the [Streamer.bot](https://streamer.bot/) following
-this [extension](https://extensions.streamer.bot/t/minecraft-websocket-integration/167)
+## Background
+
+This Minecraft mod is intended to be a Fabric-based replacement for the Bukkit plugin  
+[**Minecraft WebSocket Integration**](https://github.com/KK964/Minecraft_Websocket_Intergration/),
+which is no longer actively maintained.
+
+Because of this, MineSocket is compatible with existing configurations used by
+[**Streamer.bot**](https://streamer.bot/) via the following extension:
+
+👉 https://extensions.streamer.bot/t/minecraft-websocket-integration/167
+
+---
+
+## Fork Information
+
+This repository is a fork of the original MineSocket project with:
+- updated dependencies
+- fixes for modern Fabric versions
+- compatibility with **Minecraft 1.21.10**
+
+Original project credit belongs to the original author.
