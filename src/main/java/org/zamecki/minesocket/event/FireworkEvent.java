@@ -12,6 +12,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.text.TextCodecs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +23,6 @@ import java.util.Random;
 
 import static org.zamecki.minesocket.ModData.MOD_ID;
 import static org.zamecki.minesocket.ModData.logger;
-
 
 /// FireworkEvent: Creates fireworks around a player in random positions.
 ///
@@ -86,7 +88,8 @@ public class FireworkEvent implements IGameEvent {
         this.ticksSinceLastSpawn = 0;
 
         ServerPlayerEntity player = findPlayer(this.playerName);
-        if (player == null) return false;
+        if (player == null)
+            return false;
 
         this.bossBarName = null;
 
@@ -95,7 +98,11 @@ public class FireworkEvent implements IGameEvent {
 
             // Try to parse as Raw JSON text format
             try {
-                this.bossBarName = Text.Serialization.fromJson(textArg, player.getRegistryManager());
+                this.bossBarName = net.minecraft.text.TextCodecs.CODEC
+                        .parse(player.getRegistryManager().getOps(com.mojang.serialization.JsonOps.INSTANCE),
+                                com.google.gson.JsonParser.parseString(textArg))
+                        .result()
+                        .orElse(net.minecraft.text.Text.of(textArg));
             } catch (Exception e) {
                 // If not valid JSON, use as plain text
                 logger.warn("Failed to parse boss bar text as JSON, using as plain text: {}", textArg);
@@ -103,7 +110,8 @@ public class FireworkEvent implements IGameEvent {
             }
         }
 
-        logger.info("FireworkEvent started for '{}' with duration of {} ticks and interval of {} ticks, radius {}", this.playerName, this.ticksRemaining, this.spawnInterval, this.radius);
+        logger.info("FireworkEvent started for '{}' with duration of {} ticks and interval of {} ticks, radius {}",
+                this.playerName, this.ticksRemaining, this.spawnInterval, this.radius);
 
         return true;
     }
@@ -137,14 +145,15 @@ public class FireworkEvent implements IGameEvent {
         }
 
         return Text.translatableWithFallback(
-            "event." + MOD_ID + ".fireworks.display_name",
-            "Firework Event for player: %1$s",
-            this.playerName);
+                "event." + MOD_ID + ".fireworks.display_name",
+                "Firework Event for player: %1$s",
+                this.playerName);
     }
 
     @Override
     public float getProgress() {
-        if (this.initialDuration <= 0) return 0;
+        if (this.initialDuration <= 0)
+            return 0;
         return (float) this.ticksRemaining / this.initialDuration;
     }
 
@@ -161,8 +170,10 @@ public class FireworkEvent implements IGameEvent {
         return player;
     }
 
-    private <T> T getArg(String[] args, int index, T defaultValue, String paramName, java.util.function.Function<String, T> converter) {
-        if (args.length <= index) return defaultValue;
+    private <T> T getArg(String[] args, int index, T defaultValue, String paramName,
+            java.util.function.Function<String, T> converter) {
+        if (args.length <= index)
+            return defaultValue;
 
         try {
             return converter.apply(args[index]);
@@ -173,11 +184,15 @@ public class FireworkEvent implements IGameEvent {
     }
 
     private void spawnFirework(ServerPlayerEntity player) {
-        Vec3d pos = getRandomPosition(player.getPos());
-        ItemStack fireworkStack = createRandomFirework();
-        FireworkRocketEntity firework = new FireworkRocketEntity(player.getWorld(), pos.x, pos.y, pos.z, fireworkStack);
+        Vec3d playerPos = new Vec3d(player.getX(), player.getY(), player.getZ());
+        Vec3d pos = getRandomPosition(playerPos);
 
-        player.getWorld().spawnEntity(firework);
+        ItemStack fireworkStack = createRandomFirework();
+
+        var world = (net.minecraft.server.world.ServerWorld) player.getEntityWorld();
+        FireworkRocketEntity firework = new FireworkRocketEntity(world, pos.x, pos.y, pos.z, fireworkStack);
+
+        world.spawnEntity(firework);
     }
 
     private Vec3d getRandomPosition(Vec3d basePos) {

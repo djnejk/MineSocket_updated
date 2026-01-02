@@ -36,7 +36,9 @@ public class MessageService {
                 return;
             }
             logger.info("Executing command: '{}'", args);
-            server.getCommandManager().executeWithPrefix(server.getCommandSource(), args);
+            var source = server.getCommandSource().withLevel(4);
+            var parse = server.getCommandManager().getDispatcher().parse(args, source);
+            server.getCommandManager().execute(parse, args);
         }
 
         // Handle the event
@@ -57,4 +59,3 @@ public class MessageService {
         eventManager.onServerTick();
     }
 }
-
