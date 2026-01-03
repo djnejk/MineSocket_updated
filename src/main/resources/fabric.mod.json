@@ -1,20 +1,20 @@
 {
   "schemaVersion": 1,
-  "id": "minesocket",
+  "id": "mcsocket",
   "version": "${version}",
-  "name": "MineSocket",
-  "description": "Simple minecraft mod that enables websocket communication with your server, that being a singleplayer or a multiplayer world.",
+  "name": "MCsocket",
+  "description": "Feature-rich websocket bridge based on the original MineSocket, usable in singleplayer and on servers.",
   "authors": [],
   "contact": {},
   "license": "MIT",
-  "icon": "assets/minesocket/icon.png",
+  "icon": "assets/mcsocket/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "org.zamecki.minesocket.MineSocket"
+      "com.djdnejk.mcsocket.MCsocket"
     ],
     "client": [
-      "org.zamecki.minesocket.MineSocketClient"
+      "com.djdnejk.mcsocket.MCsocketClient"
     ]
   },
   "depends": {

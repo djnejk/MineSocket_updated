@@ -1,4 +1,4 @@
-package org.zamecki.minesocket.event;
+package com.djdnejk.mcsocket.event;
 
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.text.Text;

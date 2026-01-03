@@ -1,22 +1,36 @@
-package org.zamecki.minesocket.services;
+package com.djdnejk.mcsocket.services;
 
+import com.djdnejk.mcsocket.config.MCsocketConfiguration;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.DefaultSSLWebSocketServerFactory;
 import org.java_websocket.server.WebSocketServer;
-import org.zamecki.minesocket.config.MineSocketConfiguration;
 
-import java.net.InetSocketAddress;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import java.io.InputStream;
 import java.net.BindException;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyStore;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.zamecki.minesocket.ModData.logger;
+import static com.djdnejk.mcsocket.ModData.logger;
 
 public class WebSocketService {
-    private final MineSocketConfiguration config;
+    private final MCsocketConfiguration config;
     private final MessageService messageService;
     private InetSocketAddress address;
     private CustomWebSocketServer wsServer;
+    private final Set<WebSocket> connections = Collections.synchronizedSet(new HashSet<>());
 
     // Enumeration to control server states
     public enum ServerState {
@@ -25,7 +39,7 @@ public class WebSocketService {
 
     private volatile ServerState state = ServerState.STOPPED;
 
-    public WebSocketService(MineSocketConfiguration config, MessageService messageService) {
+    public WebSocketService(MCsocketConfiguration config, MessageService messageService) {
         this.config = config;
         this.messageService = messageService;
         this.address = new InetSocketAddress(config.host, config.port);
@@ -33,6 +47,16 @@ public class WebSocketService {
 
     public boolean isRunning() {
         return state == ServerState.RUNNING;
+    }
+
+    public void broadcast(String message) {
+        synchronized (connections) {
+            for (WebSocket conn : connections) {
+                if (conn.isOpen()) {
+                    conn.send(message);
+                }
+            }
+        }
     }
 
     /**
@@ -51,6 +75,7 @@ public class WebSocketService {
             wsServer = new CustomWebSocketServer(address);
             wsServer.setReuseAddr(true); // Allows address reuse immediately
             wsServer.setConnectionLostTimeout(30); // Timeout to detect lost connections
+            configureSsl(wsServer);
 
             // Start in a separate thread
             Thread serverThread = new Thread(() -> {
@@ -66,11 +91,11 @@ public class WebSocketService {
             serverThread.start();
 
             // Wait up to 5 seconds for the server to start
-            for (int i = 0; i < 50; i++) {
-                if (wsServer.isRunning()) {
-                    state = ServerState.RUNNING;
-                    logger.info("WebSocket server started on {}:{}", address.getHostString(), address.getPort());
-                    return true;
+        for (int i = 0; i < 50; i++) {
+            if (wsServer.isRunning()) {
+                state = ServerState.RUNNING;
+                logger.info("WebSocket server started on {}:{}", address.getHostString(), address.getPort());
+                return true;
                 }
                 Thread.sleep(100);
             }
@@ -93,6 +118,58 @@ public class WebSocketService {
                 logger.error("Failed to start WebSocket server: ", e);
             }
             return false;
+        }
+    }
+
+    private void configureSsl(CustomWebSocketServer server) {
+        if (!config.sslEnabled) {
+            return;
+        }
+
+        SSLContext sslContext = createSslContext();
+        if (sslContext == null) {
+            logger.error("TLS was requested but SSL context could not be initialized; continuing without encryption.");
+            return;
+        }
+
+        server.setWebSocketFactory(new DefaultSSLWebSocketServerFactory(sslContext));
+        logger.info("TLS enabled for WebSocket server (wss://)");
+    }
+
+    private SSLContext createSslContext() {
+        try {
+            Path keystorePath = Path.of(config.sslKeyStorePath);
+            if (!Files.exists(keystorePath)) {
+                logger.error("Keystore not found at {}", keystorePath.toAbsolutePath());
+                return null;
+            }
+
+            char[] password = config.sslKeyStorePassword.toCharArray();
+            KeyStore keyStore = null;
+            try (InputStream inputStream = Files.newInputStream(keystorePath)) {
+                keyStore = KeyStore.getInstance("PKCS12");
+                keyStore.load(inputStream, password);
+            } catch (Exception primary) {
+                // Fallback to JKS if PKCS12 failed
+                try (InputStream inputStream = Files.newInputStream(keystorePath)) {
+                    keyStore = KeyStore.getInstance("JKS");
+                    keyStore.load(inputStream, password);
+                }
+            }
+
+            if (keyStore == null) {
+                logger.error("Unable to load keystore from {}", keystorePath);
+                return null;
+            }
+
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(keyStore, password);
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(kmf.getKeyManagers(), null, null);
+            return sslContext;
+        } catch (Exception e) {
+            logger.error("Failed to initialize SSL context: {}", e.getMessage());
+            return null;
         }
     }
 
@@ -188,6 +265,53 @@ public class WebSocketService {
         return stopped && started;
     }
 
+    private boolean isAuthorized(WebSocket conn, ClientHandshake handshake) {
+        if (!config.requireAuthToken) {
+            return true;
+        }
+
+        String token = extractToken(handshake.getFieldValue("Authorization"));
+        if (token.isEmpty()) {
+            token = extractTokenFromQuery(handshake.getResourceDescriptor());
+        }
+
+        if (!token.equals(config.authToken)) {
+            conn.close(1008, "Unauthorized");
+            return false;
+        }
+        return true;
+    }
+
+    private String extractToken(String header) {
+        if (header == null) {
+            return "";
+        }
+        String trimmed = header.trim();
+        if (trimmed.toLowerCase().startsWith("bearer ")) {
+            return trimmed.substring(7);
+        }
+        return trimmed;
+    }
+
+    private String extractTokenFromQuery(String descriptor) {
+        try {
+            URI uri = new URI(descriptor);
+            String query = uri.getQuery();
+            if (query == null || query.isEmpty()) {
+                return "";
+            }
+
+            for (String entry : query.split("&")) {
+                String[] keyValue = entry.split("=", 2);
+                if (keyValue.length == 2 && keyValue[0].equalsIgnoreCase("token")) {
+                    return URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return "";
+    }
+
     /**
      * Custom WebSocketServer implementation for better control
      */
@@ -212,7 +336,12 @@ public class WebSocketService {
         @Override
         public void onOpen(WebSocket conn, ClientHandshake handshake) {
             String clientId = conn.getRemoteSocketAddress().toString();
+            if (!isAuthorized(conn, handshake)) {
+                logger.warn("Rejected unauthorized connection from {}", clientId);
+                return;
+            }
             logger.info("New connection from {}", clientId);
+            connections.add(conn);
         }
 
         @Override
@@ -220,13 +349,14 @@ public class WebSocketService {
             String clientId = conn.getRemoteSocketAddress().toString();
             logger.info("Closed connection to {}: code={}, reason={}, remote={}",
                 clientId, code, reason, remote);
+            connections.remove(conn);
         }
 
         @Override
         public void onMessage(WebSocket conn, String message) {
             String clientId = conn.getRemoteSocketAddress().toString();
             logger.info("Received message from {}: {}", clientId, message);
-            messageService.handleMessage(message);
+            messageService.handleMessage(conn, message);
         }
 
         @Override

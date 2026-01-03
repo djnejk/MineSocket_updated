@@ -1,4 +1,4 @@
-package org.zamecki.minesocket.config;
+package com.djdnejk.mcsocket.config;
 
 import com.electronwill.nightconfig.core.*;
 import com.electronwill.nightconfig.core.io.WritingMode;
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import static org.zamecki.minesocket.ModData.logger;
+import static com.djdnejk.mcsocket.ModData.logger;
 
 public abstract class Config implements UnmodifiableConfig, CommentedConfig {
     private CommentedConfig config;
@@ -65,6 +65,10 @@ public abstract class Config implements UnmodifiableConfig, CommentedConfig {
 
     public void write() {
         TomlFormat.instance().createWriter().write(this.config, this.path, WritingMode.REPLACE);
+    }
+
+    public Path getPath() {
+        return path;
     }
 
     private static String readToml(Path path) {
