@@ -1,8 +1,7 @@
 package org.zamecki.minesocket.config;
 
-import java.nio.file.Path;
-
 import static org.zamecki.minesocket.ModData.MOD_ID;
+import java.nio.file.Path;
 
 public class MineSocketConfiguration extends Config {
     public int port;
@@ -25,5 +24,9 @@ public class MineSocketConfiguration extends Config {
     public void reload() {
         this.read();
         this.load();
+    }
+
+    public Path getConfigPath() {
+        return super.getPath().getParent();
     }
 }

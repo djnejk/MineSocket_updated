@@ -67,6 +67,10 @@ public abstract class Config implements UnmodifiableConfig, CommentedConfig {
         TomlFormat.instance().createWriter().write(this.config, this.path, WritingMode.REPLACE);
     }
 
+    public Path getPath() {
+        return path;
+    }
+
     private static String readToml(Path path) {
         // Create parent directories as needed
         path.getParent().toFile().mkdirs();

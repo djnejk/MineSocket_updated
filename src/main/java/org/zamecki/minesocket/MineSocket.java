@@ -9,6 +9,7 @@ import net.minecraft.text.Text;
 import org.zamecki.minesocket.config.MineSocketConfiguration;
 import org.zamecki.minesocket.controller.CommandController;
 import org.zamecki.minesocket.services.MessageService;
+import org.zamecki.minesocket.services.RecordingService;
 import org.zamecki.minesocket.services.WebSocketService;
 
 import static org.zamecki.minesocket.ModData.MOD_ID;
@@ -19,6 +20,7 @@ public class MineSocket implements ModInitializer {
     WebSocketService wsService;
     MessageService messageService;
     CommandController commandController;
+    RecordingService recordingService;
 
     @Override
     public void onInitialize() {
@@ -30,12 +32,14 @@ public class MineSocket implements ModInitializer {
         // Register events callbacks
         registerEventsCallbacks();
 
-        // Initialize the WebSocketService
-        messageService = new MessageService();
+        // Initialize services
+        recordingService = new RecordingService(config.getConfigPath());
+        messageService = new MessageService(recordingService);
         wsService = new WebSocketService(config, messageService);
+        recordingService.setWebSocketService(wsService);
 
         // Register the commands
-        commandController = new CommandController(wsService);
+        commandController = new CommandController(wsService, recordingService);
     }
 
     private void registerEventsCallbacks() {
@@ -52,6 +56,7 @@ public class MineSocket implements ModInitializer {
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             messageService.start(server, config);
+            recordingService.start(server);
             if (!server.isDedicated() || !config.autoStart) {
                 return;
             }

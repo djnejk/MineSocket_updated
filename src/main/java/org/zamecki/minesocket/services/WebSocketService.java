@@ -7,6 +7,9 @@ import org.zamecki.minesocket.config.MineSocketConfiguration;
 
 import java.net.InetSocketAddress;
 import java.net.BindException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -17,6 +20,7 @@ public class WebSocketService {
     private final MessageService messageService;
     private InetSocketAddress address;
     private CustomWebSocketServer wsServer;
+    private final Set<WebSocket> connections = Collections.synchronizedSet(new HashSet<>());
 
     // Enumeration to control server states
     public enum ServerState {
@@ -33,6 +37,16 @@ public class WebSocketService {
 
     public boolean isRunning() {
         return state == ServerState.RUNNING;
+    }
+
+    public void broadcast(String message) {
+        synchronized (connections) {
+            for (WebSocket conn : connections) {
+                if (conn.isOpen()) {
+                    conn.send(message);
+                }
+            }
+        }
     }
 
     /**
@@ -213,6 +227,7 @@ public class WebSocketService {
         public void onOpen(WebSocket conn, ClientHandshake handshake) {
             String clientId = conn.getRemoteSocketAddress().toString();
             logger.info("New connection from {}", clientId);
+            connections.add(conn);
         }
 
         @Override
@@ -220,6 +235,7 @@ public class WebSocketService {
             String clientId = conn.getRemoteSocketAddress().toString();
             logger.info("Closed connection to {}: code={}, reason={}, remote={}",
                 clientId, code, reason, remote);
+            connections.remove(conn);
         }
 
         @Override
