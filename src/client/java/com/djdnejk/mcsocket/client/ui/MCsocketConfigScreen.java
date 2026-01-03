@@ -129,7 +129,8 @@ public class MCsocketConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
+        // Draw a simple gradient background to avoid triggering the screen blur twice in a frame
+        context.fillGradient(0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
         context.drawCenteredTextWithShadow(textRenderer, ModData.brandText(), width / 2, 12, 0xFFFFFF);
         context.drawCenteredTextWithShadow(textRenderer, Text.translatable("screen.mcsocket.subtitle"), width / 2, 24, Formatting.GRAY.getColorValue());
 
