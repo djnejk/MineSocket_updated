@@ -1,9 +1,9 @@
-package org.zamecki.minesocket.event;
+package com.djdnejk.mcsocket.event;
 
 import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import org.zamecki.minesocket.config.MineSocketConfiguration;
+import com.djdnejk.mcsocket.config.MCsocketConfiguration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,9 +15,9 @@ public class EventManager {
     private final List<IGameEvent> runningEvents = new ArrayList<>();
     private final Map<IGameEvent, ServerBossBar> eventBossBars = new HashMap<>();
     private final MinecraftServer server;
-    private final MineSocketConfiguration config;
+    private final MCsocketConfiguration config;
 
-    public EventManager(MinecraftServer server, MineSocketConfiguration config) {
+    public EventManager(MinecraftServer server, MCsocketConfiguration config) {
         this.server = server;
         this.config = config;
         registerDefaultEvents();

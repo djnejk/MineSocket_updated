@@ -1,4 +1,4 @@
-package org.zamecki.minesocket.event;
+package com.djdnejk.mcsocket.event;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.component.DataComponentTypes;
@@ -21,8 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import static org.zamecki.minesocket.ModData.MOD_ID;
-import static org.zamecki.minesocket.ModData.logger;
+import static com.djdnejk.mcsocket.ModData.MOD_ID;
+import static com.djdnejk.mcsocket.ModData.logger;
 
 /// FireworkEvent: Creates fireworks around a player in random positions.
 ///
