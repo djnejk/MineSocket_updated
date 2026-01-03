@@ -129,7 +129,7 @@ public class MCsocketConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackgroundTexture(context);
+        renderBackground(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(textRenderer, ModData.brandText(), width / 2, 12, 0xFFFFFF);
         context.drawCenteredTextWithShadow(textRenderer, Text.translatable("screen.mcsocket.subtitle"), width / 2, 24, Formatting.GRAY.getColorValue());
 
