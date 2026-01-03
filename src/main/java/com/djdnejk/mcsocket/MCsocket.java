@@ -1,41 +1,46 @@
-package org.zamecki.minesocket;
+package com.djdnejk.mcsocket;
 
+import com.djdnejk.mcsocket.config.MCsocketConfiguration;
+import com.djdnejk.mcsocket.controller.CommandController;
+import com.djdnejk.mcsocket.services.MessageService;
+import com.djdnejk.mcsocket.services.RecordingService;
+import com.djdnejk.mcsocket.services.WebSocketService;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.text.Text;
-import org.zamecki.minesocket.config.MineSocketConfiguration;
-import org.zamecki.minesocket.controller.CommandController;
-import org.zamecki.minesocket.services.MessageService;
-import org.zamecki.minesocket.services.WebSocketService;
 
-import static org.zamecki.minesocket.ModData.MOD_ID;
-import static org.zamecki.minesocket.ModData.logger;
+import static com.djdnejk.mcsocket.ModData.MOD_ID;
+import static com.djdnejk.mcsocket.ModData.logger;
 
-public class MineSocket implements ModInitializer {
-    MineSocketConfiguration config;
+public class MCsocket implements ModInitializer {
+    MCsocketConfiguration config;
     WebSocketService wsService;
     MessageService messageService;
     CommandController commandController;
+    RecordingService recordingService;
 
     @Override
     public void onInitialize() {
-        logger.info("MineSocket is initializing");
+        logger.info("MCsocket is initializing");
 
         // Initialize the configuration
-        config = new MineSocketConfiguration();
+        config = new MCsocketConfiguration();
 
         // Register events callbacks
         registerEventsCallbacks();
 
-        // Initialize the WebSocketService
-        messageService = new MessageService();
+        // Initialize services
+        recordingService = new RecordingService(config.getConfigPath());
+        messageService = new MessageService(recordingService);
         wsService = new WebSocketService(config, messageService);
+        messageService.setWebSocketService(wsService);
+        recordingService.setWebSocketService(wsService);
 
         // Register the commands
-        commandController = new CommandController(wsService);
+        commandController = new CommandController(wsService, recordingService);
     }
 
     private void registerEventsCallbacks() {
@@ -47,11 +52,12 @@ public class MineSocket implements ModInitializer {
             }
 
             player.sendMessage(Text.translatable("callback." + MOD_ID + ".on_op_join",
-                "You are using MineSocket, you can configure/use the mod by using the '/ms' command"));
+                "You are using MCsocket, you can configure/use the mod by using the '/ms' command"));
         });
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             messageService.start(server, config);
+            recordingService.start(server);
             if (!server.isDedicated() || !config.autoStart) {
                 return;
             }

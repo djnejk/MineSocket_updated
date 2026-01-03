@@ -1,0 +1,17 @@
+{
+  "callback.mcsocket.on_open": "MCsocket WebSocket server started",
+  "callback.mcsocket.on_op_join": "You are using MCsocket, you can configure/use the mod by using the '/ms' command",
+  "callback.mcsocket.on_singleplayer": "MCsocket is available in singleplayer, but you need to activate with the command '/ms'",
+  "callback.mcsocket.on_open_error": "MCsocket WebSocket server failed to start",
+  "callback.mcsocket.on_close_error": "MCsocket WebSocket server failed to stop",
+  "callback.mcsocket.on_close": "MCsocket WebSocket server stopped",
+  "command.mcsocket.help": "MCsocket Help:\n/ms - Main command\n/ms help - Show this help message\n/ms start - Start the WebSocket server\n/ms stop - Stop the WebSocket server\n/ms recording record - Start recording player actions\n/ms recording save <name> - Save the active recording\n/ms recording play <name> - Play a saved recording\n/ms recording list - List saved recordings\n/ms recording delete <name> - Remove a saved recording\n/ms recording cancel - Stop recording without saving",
+  "command.mcsocket.started": "WebSocket server started",
+  "command.mcsocket.start_error": "An error occurred while starting the WebSocket server",
+  "command.mcsocket.stopped": "WebSocket server stopped",
+  "command.mcsocket.stop_error": "An error occurred while stopping the WebSocket server",
+  "command.mcsocket.already_running": "WebSocket server is already running",
+  "command.mcsocket.not_running": "WebSocket server is not running",
+  "command.mcsocket.error": "An error occurred while executing the command",
+  "event.mcsocket.fireworks.display_name": "Firework Event for player: %1$s"
+}
