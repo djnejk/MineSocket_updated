@@ -1,6 +1,7 @@
 package com.djdnejk.mcsocket.client.ui;
 
 import com.djdnejk.mcsocket.ModData;
+import com.djdnejk.mcsocket.network.MenuActionPayload;
 import com.djdnejk.mcsocket.config.MCsocketConfiguration;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -10,6 +11,7 @@ import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 public class MCsocketConfigScreen extends Screen {
     private final Screen parent;
@@ -103,33 +105,38 @@ public class MCsocketConfigScreen extends Screen {
             Text.translatable("screen.mcsocket.recording_name"));
         addDrawableChild(recordingNameField);
 
-        addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.start_ws"), button -> runCommand("ms start"))
+        addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.start_ws"),
+                button -> sendAction(MenuActionPayload.Action.START_WS))
             .position(centerX - fieldWidth / 2, controlsTop + 25).size(halfWidth, fieldHeight).build());
-        addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.stop_ws"), button -> runCommand("ms stop"))
+        addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.stop_ws"),
+                button -> sendAction(MenuActionPayload.Action.STOP_WS))
             .position(centerX + 5, controlsTop + 25).size(halfWidth, fieldHeight).build());
 
         addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.record"),
-                button -> runCommand("ms recording record"))
+                button -> sendAction(MenuActionPayload.Action.START_RECORDING))
             .position(centerX - fieldWidth / 2, controlsTop + 50).size(halfWidth, fieldHeight).build());
         addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.cancel_recording"),
-                button -> runCommand("ms recording cancel"))
+                button -> sendAction(MenuActionPayload.Action.CANCEL_RECORDING))
             .position(centerX + 5, controlsTop + 50).size(halfWidth, fieldHeight).build());
 
         addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.save_recording"), button -> {
-                String name = recordingNameField.getText().isBlank() ? "default" : recordingNameField.getText();
-                runCommand("ms recording save " + name.trim());
+                sendAction(MenuActionPayload.Action.SAVE_RECORDING, getRecordingName());
             })
             .position(centerX - fieldWidth / 2, controlsTop + 75).size(halfWidth, fieldHeight).build());
         addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.play_recording"), button -> {
-                String name = recordingNameField.getText().isBlank() ? "default" : recordingNameField.getText();
-                runCommand("ms recording play " + name.trim());
+                sendAction(MenuActionPayload.Action.PLAY_RECORDING, getRecordingName());
             })
             .position(centerX + 5, controlsTop + 75).size(halfWidth, fieldHeight).build());
+
+        addDrawableChild(ButtonWidget.builder(Text.translatable("screen.mcsocket.list_recordings"),
+                button -> sendAction(MenuActionPayload.Action.LIST_RECORDINGS))
+            .position(centerX - fieldWidth / 2, controlsTop + 100).size(fieldWidth, fieldHeight).build());
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
+        // Draw a simple gradient background to avoid triggering the screen blur twice in a frame
+        context.fillGradient(0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
         context.drawCenteredTextWithShadow(textRenderer, ModData.brandText(), width / 2, 12, 0xFFFFFF);
         context.drawCenteredTextWithShadow(textRenderer, Text.translatable("screen.mcsocket.subtitle"), width / 2, 24, Formatting.GRAY.getColorValue());
 
@@ -196,15 +203,29 @@ public class MCsocketConfigScreen extends Screen {
         }
     }
 
-    private void runCommand(String command) {
+    private void sendAction(MenuActionPayload.Action action) {
+        sendAction(action, "");
+    }
+
+    private void sendAction(MenuActionPayload.Action action, String recordingName) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client == null || client.player == null || client.getNetworkHandler() == null) {
             statusText = Text.translatable("screen.mcsocket.no_player");
             return;
         }
 
-        client.getNetworkHandler().sendChatCommand(command.startsWith("/") ? command.substring(1) : command);
-        statusText = Text.translatable("screen.mcsocket.sent_command", command);
+        if (!ClientPlayNetworking.canSend(MenuActionPayload.ID)) {
+            statusText = Text.translatable("screen.mcsocket.cannot_send_action");
+            return;
+        }
+
+        ClientPlayNetworking.send(new MenuActionPayload(action, recordingName));
+        statusText = Text.translatable("screen.mcsocket.sent_action", Text.translatable(action.getTranslationKey()));
+    }
+
+    private String getRecordingName() {
+        String text = recordingNameField.getText();
+        return text.isBlank() ? "default" : text.trim();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.djdnejk.mcsocket;
 
 import com.djdnejk.mcsocket.client.ui.MCsocketConfigScreen;
+import com.djdnejk.mcsocket.network.MenuActionPayload;
 import me.lucko.fabric.api.permissions.v0.PermissionCheckEvent;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
