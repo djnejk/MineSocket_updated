@@ -27,34 +27,9 @@ repositories {
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
+    maven { url 'https://maven.fabricmc.net' }
+    mavenCentral()
     maven { url 'https://maven.nucleoid.xyz' }
-}
-
-// Keep the build working in offline sandboxes by reusing locally cached
-// dependencies instead of trying to download blocked versions.
-configurations.configureEach {
-    resolutionStrategy {
-        // Prefer versions that already exist in the shared Gradle cache.
-        force(
-                'org.ow2.asm:asm:9.9',
-                'org.ow2.asm:asm-analysis:9.9',
-                'org.ow2.asm:asm-commons:9.9',
-                'org.ow2.asm:asm-tree:9.9',
-                'org.ow2.asm:asm-util:9.9',
-                'net.fabricmc:sponge-mixin:0.15.5+mixin.0.8.7'
-        )
-
-        eachDependency { details ->
-            if (details.requested.group == 'org.ow2.asm') {
-                details.useVersion '9.9'
-                details.because 'use cached ASM version to avoid offline download errors'
-            }
-            if (details.requested.group == 'net.fabricmc' && details.requested.name == 'sponge-mixin') {
-                details.useVersion '0.15.5+mixin.0.8.7'
-                details.because 'use cached mixin version to avoid offline download errors'
-            }
-        }
-    }
 }
 
 dependencies {

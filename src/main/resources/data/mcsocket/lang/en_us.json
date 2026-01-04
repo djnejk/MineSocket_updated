@@ -31,11 +31,14 @@
   "screen.mcsocket.start_ws": "Start WS",
   "screen.mcsocket.stop_ws": "Stop WS",
   "screen.mcsocket.record": "Record",
+  "screen.mcsocket.list_recordings": "List recordings",
   "screen.mcsocket.save_recording": "Save recording",
   "screen.mcsocket.play_recording": "Play recording",
   "screen.mcsocket.cancel_recording": "Cancel recording",
   "screen.mcsocket.no_player": "Join a world to use MCsocket actions",
   "screen.mcsocket.sent_command": "Sent command: %s",
+  "screen.mcsocket.sent_action": "Requested action: %s",
+  "screen.mcsocket.cannot_send_action": "Unable to contact server. Are you connected?",
   "screen.mcsocket.invalid_port": "Please enter a valid port (1-65535)",
   "screen.mcsocket.saved": "MCsocket settings saved"
 }

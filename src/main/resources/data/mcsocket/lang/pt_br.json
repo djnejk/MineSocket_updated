@@ -31,11 +31,14 @@
   "screen.mcsocket.start_ws": "Iniciar WS",
   "screen.mcsocket.stop_ws": "Parar WS",
   "screen.mcsocket.record": "Gravar",
+  "screen.mcsocket.list_recordings": "Listar gravações",
   "screen.mcsocket.save_recording": "Salvar gravação",
   "screen.mcsocket.play_recording": "Reproduzir gravação",
   "screen.mcsocket.cancel_recording": "Cancelar gravação",
   "screen.mcsocket.no_player": "Entre em um mundo para usar o MCsocket",
   "screen.mcsocket.sent_command": "Comando enviado: %s",
+  "screen.mcsocket.sent_action": "Ação solicitada: %s",
+  "screen.mcsocket.cannot_send_action": "Não é possível contatar o servidor. Você está conectado?",
   "screen.mcsocket.invalid_port": "Informe uma porta válida (1-65535)",
   "screen.mcsocket.saved": "Configurações do MCsocket salvas"
 }
