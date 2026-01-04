@@ -11,20 +11,14 @@ import net.minecraft.text.Text;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 
 import static com.djdnejk.mcsocket.ModData.MOD_ID;
 
 public class MCsocketClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        registerPayloads();
         registerEventCallbacks();
         registerMenuButton();
-    }
-
-    private void registerPayloads() {
-        PayloadTypeRegistry.playC2S().register(MenuActionPayload.ID, MenuActionPayload.CODEC);
     }
 
     private void registerEventCallbacks() {
